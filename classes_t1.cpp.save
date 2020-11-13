@@ -1,0 +1,26 @@
+#include<iostream>
+#include"mclasses.h"
+#include<new>
+using namespace std;
+using namespace geom;
+
+#define LIST_LENGTH 1000000
+int main(){
+pixel* p;
+int l=LIST_LENGTH;
+pixelList myList;
+pixel ptest;
+bool r;
+p=new (nothrow) pixel[LIST_LENGTH];
+if (p==nullptr){
+cout<<"memory error"<<endl;
+}
+else{
+for(int i=0;i<l;i++){
+p[i]={i,i+1};
+} 
+
+return 0;
+}
+
+
