@@ -9,6 +9,7 @@
 #include<iostream>
 #include<new>
 #include<cmath>
+#include<chrono>
 
 using namespace std;
 namespace geom{
@@ -42,48 +43,6 @@ bool pixel::lessthan(pixel spixel){
 		}
 }
 
-bool pixel::isneigh(pixel* bound,int boundL){
-	int i=0;
-	pixel neighbors[8];
-	neighbors[0]=pixel(this->i-1,this->j-1,-1);
-	neighbors[1]=pixel(this->i-1,this->j,-1);
-	neighbors[2]=pixel(this->i-1,this->j+1,-1);
-	neighbors[3]=pixel(this->i,this->j-1,-1);
-	neighbors[4]=pixel(this->i,this->j+1,-1);
-	neighbors[5]=pixel(this->i+1,this->j-1,-1);
-	neighbors[6]=pixel(this->i+1,this->j,-1);
-	neighbors[7]=pixel(this->i+1,this->j+1,-1);
-	while((i<boundL)){
-		if(bound[i].pixeleq(neighbors[0])){
-			return true;
-		}
-		else if(bound[i].pixeleq(neighbors[1])){
-			return true;
-		}
-		else if(bound[i].pixeleq(neighbors[2])){
-			return true;
-				}
-		else if(bound[i].pixeleq(neighbors[3])){
-			return true;
-				}
-		else if(bound[i].pixeleq(neighbors[4])){
-			return true;
-				}
-		else if(bound[i].pixeleq(neighbors[5])){
-			return true;
-				}
-		else if(bound[i].pixeleq(neighbors[6])){
-			return true;
-				}
-		else if(bound[i].pixeleq(neighbors[7])){
-			return true;
-				}
-		else{
-			i++;
-		}
-	}
-	return false;
-}
 pixel::~pixel(){
 
 }
@@ -133,43 +92,6 @@ void pixelList::fillList(pixel* _pixels, int Length){
 	this->L=Length;
 }
 
-bool pixelList::find(pixel testpixel,int start){
-	bool check=false;
-	int i=start;
-	while(check==false && i<this->L){
-		check=this->pixels[i].pixeleq(testpixel);
-		i++;
-	}
-	return check;
-}
-
-indexRes::indexRes(){
-
-}
-
-indexRes::~indexRes(){
-
-}
-
-indexRes pixelList::index(pixel testpixel){
-	indexRes res;
-	bool check=false;
-	int i=0;
-		while(check==false && i<this->L){
-			check=this->pixels[i].pixeleq(testpixel);
-			i++;
-		}
-		if (check==true){
-			i--;
-			res.valid=true;
-		}
-		else{
-			i=-1;
-			res.valid=false;
-		}
-		res.index=i;
-		return res;
-}
 pixelList pixelList::copy(){
 	pixel* p;
 	pixelList copy;
@@ -182,36 +104,6 @@ pixelList pixelList::copy(){
 	return copy;
 }
 
-
-void pixelList::removeNeighs(pixel pnt){
-	pixel neighbors[9];
-	neighbors[0]=pixel(pnt.i-1,pnt.j-1,-1);
-	neighbors[1]=pixel(pnt.i-1,pnt.j,-1);
-	neighbors[2]=pixel(pnt.i-1,pnt.j+1,-1);
-	neighbors[3]=pixel(pnt.i,pnt.j-1,-1);
-	neighbors[4]=pixel(pnt.i,pnt.j,-1);
-	neighbors[5]=pixel(pnt.i,pnt.j+1,-1);
-	neighbors[6]=pixel(pnt.i+1,pnt.j-1,-1);
-	neighbors[7]=pixel(pnt.i+1,pnt.j,-1);
-	neighbors[8]=pixel(pnt.i+1,pnt.j+1,-1);
-	int i=0,j=0;
-	int k=0;
-	bool check=false;
-	for (j=0;j<9;j++){
-			while(check==false && i<this->L){
-				check=this->pixels[i].pixeleq(neighbors[j]);
-				i++;
-			}
-			if (check==true){
-				this->pixels[i-1]=pixel(-10,-10,-1);
-				check=false;
-				k++;
-			}
-			i=0;
-		}
-	this->rL=this->rL-k;
-
-}
 
 void pixelList::print(){
 	for (int i=0;i<this->L;i++){
@@ -473,6 +365,51 @@ findTriRes findTri(pixel pnt,pixelList region,pixelList Tregion,pixel startpixel
 	res.triangles=triangles;
 	res.nstartpixel=startpixel;
 	return res;
+}
+
+/*This function is new*/
+triangleList triangulate2D(pixelList Reg){
+	pixelList _Reg;		//this is the remaining connected component
+	triangleList T; 	//this is the main triangle List
+	triangleList tri;	//this the auxiliary triangle List 
+	triangle* tbuffer;	//a buffer for all the possible triangles
+	pixel p0;		//declare the triangulation starter point P0.
+	int tri_idx_f;		//this is the floating triangle index, previously it was "i"
+	int tri_idx = 0;	//this is the triangle index used to build the main triangle List.
+	int nidx_p0=0;		//declare the next iteration P0's index in _Reg.
+	int tbufferL=0; 	//cumulative value of the length of the main triangle buffer
+	int maxT=2*(pow((sqrt(Reg.L)-1),2));	//calculate the maximum possible amount of triangles
+	const pixel pNULL=pixel(-10,-10,-1);	//define the null pixel
+	//points = new pixel[];		//	allocate 2D points with the points ptr
+	tbuffer = new triangle[maxT];// allocate triangles with the triangle ptr
+	findTriRes res;				//the result of fintri function
+	pixel search_init_pixel;		//the pixel that will be used as a search start pixel in the next iteration previosly markedpixel
+	_Reg=Reg.copy(); //copy main connected component region to the remaining region
+	search_init_pixel = Reg.pixels[0];// begin the searching in the first pixel
+	p0=Reg.pixels[0]; // obtaing the triangulation starter pixel P0
+	_Reg.rL=_Reg.L;// the length of the remaining elements of _Reg is equal to the total length of _Reg.
+	while(_Reg.rL>0){
+		res=findTri(p0,_Reg,Reg,search_init_pixel); //find triangles using findTri function
+		tri=res.triangles;		// copy the obtained triangle list 
+		_Reg=res.pixels;		// copy the remaining pixels
+		search_init_pixel=res.nstartpixel;	// the search start pixel
+		for(tri_idx_f=tri_idx;tri_idx_f<tri_idx+tri.L;tri_idx_f++){	// add the tri to tbuffer
+			tbuffer[tri_idx_f]=tri.triangles[tri_idx_f-tri_idx];
+		}
+		tbufferL=tbufferL+tri.L;	// update the Length of tbuffer
+		tri_idx=tri_idx+tri.L;		// update the triangle index tri_idx
+		if(_Reg.rL>0){			// calculate the next P0
+			while((_Reg.pixels[nidx_p0].pixeleq(pNULL))==1){
+				nidx_p0++;
+			}
+			p0=_Reg.pixels[nidx_p0];
+		}
+	}
+	T.fill(tbuffer,tbufferL);	//fill the main Triangle List with the triangle buffer
+	T.print();	
+	cout<<T.L<<endl;
+	cout<<Reg.L<<endl;
+	return T;
 }
 
 pixelList read2Dpoints(string filename,int Length){

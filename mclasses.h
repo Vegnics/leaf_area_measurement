@@ -35,24 +35,14 @@ struct pixel{
 	void print();
 	bool pixeleq(pixel);
 	bool lessthan(pixel);
-	bool isneigh(pixel*,int);
 	int i,j,idx;
 	virtual ~pixel();
 };
 
-struct indexRes{
-	indexRes();
-	int index;
-	bool valid;
-	virtual ~indexRes();
-};
 
 struct pixelList{
 	pixelList();
 	void fillList(pixel*,int);
-	bool find(pixel,int);
-	indexRes index(pixel);
-	void removeNeighs(pixel);
 	void print();
 	pixelList copy();
 	int L;
@@ -87,6 +77,8 @@ struct findTriRes{
 	pixel nstartpixel;
 	virtual ~findTriRes();
 };
+
+triangleList triangulate2D(pixelList);
 
 double sq(double);
 

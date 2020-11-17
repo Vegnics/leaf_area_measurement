@@ -13,9 +13,9 @@ using namespace std;
 using namespace geom;
 
 #define LENGTH 6
-#define TOTAL 26181
-#define data "Ger3data.txt"
-#define data3d "Ger3data3D.txt"
+#define TOTAL 54289
+#define data "data.txt"
+#define data3d "data3D.txt"
 int main(){
 	triangleList T;		//declare the main triangle list
 	triangleList tri;	//declare the auxiliary triangle list
@@ -69,6 +69,7 @@ int main(){
 	cout<<T.L<<endl;
 	AREA=areaCalc(points3D,T);//compute the total area
 	cout<<AREA<<endl;
+	cout<<Reg.L<<endl;
 	auto stop = chrono::high_resolution_clock::now();
 	auto dur = stop - begin;
 	auto ms = chrono::duration_cast<chrono::milliseconds>(dur).count();
